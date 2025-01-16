@@ -6,7 +6,8 @@ MODULE MPIDATA
   LOGICAL :: ImtheBOSS
   INTEGER :: myWest, myEast, mySouth, myNorth, myFront, myBack
   INTEGER :: myCartRank
-  INTEGER, DIMENSION(3) :: PeriodicArr, NumProcArr, myCOORDS
+  INTEGER, DIMENSION(3) :: NumProcArr, myCOORDS
+  LOGICAL, DIMENSION(3) :: PeriodicArr
   INTEGER :: CommCart, myIs, myJs, myKs
   INTEGER :: type_W_send, type_W_recv
   INTEGER :: type_E_send, type_E_recv

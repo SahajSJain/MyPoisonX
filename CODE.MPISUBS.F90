@@ -7,7 +7,7 @@ subroutine MPISTARTUP
   USE mpi
   IMPLICIT NONE
   ! include 'mpif.h'
-  INTEGER IERROR
+  INTEGER IERROR, MAX_DIMS
   logical, parameter ::  reorder=.true.
   call MPI_COMM_SIZE(MPI_COMM_WORLD, COMM_SZ, ierror)
   call MPI_COMM_RANK(MPI_COMM_WORLD, MY_RANK, ierror)
@@ -18,46 +18,13 @@ subroutine MPISTARTUP
     ImtheBOSS=.false.
   ENDIF
   Nptot=Npx*Npy*Npz
+  CALL MPISETUP
+  MAX_DIMS=3;
   ! print *, 'Hello World from process: ', MY_RANK, 'of ', COMM_SZ
-  IF(Nptot .ne. COMM_SZ) THEN
-    IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE Nptot<COMM_SZ"
-    CALL MPIKILL()
-  ENDIF
-  IF(BC_EAST .eq. 4) THEN
-    IF(BC_WEST .eq. 4) THEN
-      PeriodicArr(1)=1;
-    ELSE
-      IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE INVALID BCS IN EAST_WEST"
-      CALL MPIKILL()
-    ENDIF
-  ELSE
-    PeriodicArr(1)=0;
-  ENDIF
-  IF(BC_NORTH .eq. 4) THEN
-    IF(BC_SOUTH .eq. 4) THEN
-      PeriodicArr(2)=1;
-    ELSE
-      IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE INVALID BCS IN NORTH_SOUTH"
-      CALL MPIKILL()
-    ENDIF
-  ELSE
-    PeriodicArr(2)=0;
-  ENDIF
-  IF(BC_FRONT .eq. 4) THEN
-    IF(BC_BACK .eq. 4) THEN
-      PeriodicArr(3)=1;
-    ELSE
-      IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE INVALID BCS IN FRONT_BACK"
-      CALL MPIKILL()
-    ENDIF
-  ELSE
-    PeriodicArr(3)=0;
-  ENDIF
-  NumProcArr=(/Npx, Npy, Npz /);
   !! Do Cartesian decomposition
-  call MPI_Cart_create(MPI_COMM_WORLD, 3, NumProcArr,PeriodicArr, reorder, CommCart, ierror)
-  call  MPI_Comm_rank(CommCart,myCartRank ,ierror);
-  call   MPI_Cart_coords(CommCart, myCartRank, 3, myCOORDS);
+  call MPI_Cart_create(MPI_COMM_WORLD, MAX_DIMS, NumProcArr,PeriodicArr, reorder, CommCart, ierror)
+  call MPI_Comm_rank(CommCart,myCartRank ,ierror);
+  call MPI_Cart_coords(CommCart, myCartRank, MAX_DIMS, myCOORDS, IERROR);
   WRITE(*,*) "I am MPI Process" , myCartRank," out of ", COMM_SZ,", and I am located at",myCOORDS
   !!! GET NEIGHBOURS
   CALL MPI_CART_SHIFT(CommCart, 0, 1, myWest, myEast, ierror)
@@ -76,6 +43,56 @@ subroutine MPISTARTUP
   myKs=myCOORDS(3);
 end subroutine MPISTARTUP
 
+subroutine MPISETUP
+  USE INPUTDATA
+  USE FIELDDATA
+  USE COEFFDATA
+  use FLOWDATA
+  USE mpiDATA
+  USE mpi
+  IMPLICIT NONE
+  ! include 'mpif.h'
+  INTEGER IERROR
+  logical, parameter ::  reorder=.true.
+
+  Nptot=Npx*Npy*Npz
+  ! print *, 'Hello World from process: ', MY_RANK, 'of ', COMM_SZ
+  IF(Nptot .ne. COMM_SZ) THEN
+    IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE Nptot<COMM_SZ"
+    CALL MPIKILL()
+  ENDIF
+  IF(BC_EAST .eq. 4) THEN
+    IF(BC_WEST .eq. 4) THEN
+      PeriodicArr(1)=.true.;
+    ELSE
+      IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE INVALID BCS IN EAST_WEST"
+      CALL MPIKILL()
+    ENDIF
+  ELSE
+    PeriodicArr(1)=.false.;
+  ENDIF
+  IF(BC_NORTH .eq. 4) THEN
+    IF(BC_SOUTH .eq. 4) THEN
+      PeriodicArr(2)=.true.;
+    ELSE
+      IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE INVALID BCS IN NORTH_SOUTH"
+      CALL MPIKILL()
+    ENDIF
+  ELSE
+    PeriodicArr(2)=.false.;
+  ENDIF
+  IF(BC_FRONT .eq. 4) THEN
+    IF(BC_BACK .eq. 4) THEN
+      PeriodicArr(3)=.true.;
+    ELSE
+      IF(ImtheBOSS) WRITE(*,*) "MyPoisonX DIED BECAUSE INVALID BCS IN FRONT_BACK"
+      CALL MPIKILL()
+    ENDIF
+  ELSE
+    PeriodicArr(3)=.false.;
+  ENDIF
+  NumProcArr=(/Npx, Npy, Npz /);
+end subroutine MPISETUP
 subroutine MPIKILL()
   USE INPUTDATA
   USE FIELDDATA

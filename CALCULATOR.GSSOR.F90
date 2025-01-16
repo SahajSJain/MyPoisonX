@@ -28,6 +28,11 @@ SUBROUTINE GSSOR(kiter1, error1 )
       USE INPUTDATA
       REAL(KIND=CGR), INTENT(inout) :: QUANT
     end subroutine MPI_MAXCALC
+    SUBROUTINE CALCRESIDUAL(var,res )
+      USE INPUTDATA
+      REAL(KIND=CGR), INTENT(IN), DIMENSION((1-Ngl):(Nxc+Ngl),(1-Ngl):(Nyc+Ngl),(1-Ngl):(Nzc+Ngl)) :: var
+      REAL(KIND=CGR), INTENT(INOUT), DIMENSION((1-Ngl):(Nxc+Ngl),(1-Ngl):(Nyc+Ngl),(1-Ngl):(Nzc+Ngl)) :: res 
+    END SUBROUTINE CALCRESIDUAL
   end interface
 
   INTEGER, INTENT(OUT) :: kiter1
@@ -63,8 +68,6 @@ SUBROUTINE GSSOR(kiter1, error1 )
     TSTART1 = MPI_WTIME()
     INNERCOMMTIME=0.0;
     do INITER=1, INNERITER
-      ! IF(ImtheBOSS) WRITE(*,*) "INNER ITER NUMBER" , INITER
-      ! CALL BOUNDARY_CONDITIONS(phi)
       DO k=1,Nzc
         DO j=1, Nyc
           DO i=1, Nxc
@@ -87,21 +90,12 @@ SUBROUTINE GSSOR(kiter1, error1 )
     residual=0.0;
     LOCAL_RES=0.0;
     GLOBAL_RES=0.0;
-    DO k=1,Nzc
-      DO j=1, Nyc
-        DO i=1, Nxc
-          residual(i,j,k)=Aw(i,j,k)*phi(i-1,j,k)+Ae(i,j,k)*phi(i+1,j,k)&
-            +As(i,j,k)*phi(i,j-1,k)+An(i,j,k)*phi(i,j+1,k)&
-            +Ab(i,j,k)*phi(i,j,k-1)+Af(i,j,k)*phi(i,j,k+1)&
-            +phi(i,j,k)*Ap(i,j,k)-source(i,j,k)
-        enddo !i
-      ENDDO !j
-    ENDDO !k
+    call CALCRESIDUAL(phi,residual);
     LOCAL_RES=MAXVAL(abs(residual(1:NXC,1:NYC,1:NZC)))
     GLOBAL_RES=LOCAL_RES
     CALL MPI_MAXCALC(GLOBAL_RES)
     TEND1=MPI_WTIME()
-    IF(myCartRank .eq. 0)  WRITE(*,*) kiter1, LOCAL_RES,GLOBAL_RES, TEND1-TSTART1
+    IF(myCartRank .eq. 0)  WRITE(*, '(I10, 2X, 3E15.6)') kiter1, LOCAL_RES, GLOBAL_RES, TEND1-TSTART1
     CALL MPI_Barrier(CommCart,ierror)
   end do ! while loop
   error1=GLOBAL_RES;

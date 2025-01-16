@@ -1,11 +1,11 @@
 ======================== MyPoisonX ==============================
 Npx     Npy     Npz
-2	1	1
+1	1	1
 Ngl
 1
 ====================== Grid Data =========================
 Nx_GLBL     Ny_GLBL     Nz_GLBL
-51	51	51
+65	65	65	
 x_unif      x_start     x_end
 1           0           1
 y_unif      y_start     y_end
@@ -16,7 +16,7 @@ z_unif      z_start     z_end
 DEBUGGER    DEBUGGEROUT     EXPORTFILES
 0           0               1
 SOLVEMODE   RELAXFAC    SRJTYPE     COMM_MODE_FLAG
-2           1.7         0           1
+1           1.7         0           1
 PINITFLAG   PINITVAL    SOURCEFLAG
 1           1.0         3
 MAXITER     INNERITER   TOLERANCE   NORMTYPE

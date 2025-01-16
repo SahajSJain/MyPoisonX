@@ -9,8 +9,9 @@ all: $(EXE)
 CPP        = /lib/cpp
 CPPFLAGS   = -D MPI
 
-FC         = mpif90
+FC         = mpiifort
 COMMFLAGS  = -O0 -fbounds-check -fcheck=all -g -fbacktrace  
+#COMMFLAGS = -O3
 CFLAGS     = ${COMMFLAGS} -J$(OBJDIR) -I$(OBJDIR)  # -J and -I options specify where to place and find module files
 LFLAGS     =  
 
@@ -29,7 +30,8 @@ OBJS = $(OBJDIR)/MODULE.INPUTDATA.o     \
        $(OBJDIR)/CODE.WRITE_DUMP.o      \
        $(OBJDIR)/CALCULATOR.JACOBI.o   \
        $(OBJDIR)/CALCULATOR.MPITEST.o \
-       $(OBJDIR)/CALCULATOR.GSSOR.o 
+       $(OBJDIR)/CALCULATOR.GSSOR.o   \
+       $(OBJDIR)/CALCULATOR.RESIDUAL.o 
 
 # Create OBJDIR if it doesn't exist
 $(OBJDIR):
